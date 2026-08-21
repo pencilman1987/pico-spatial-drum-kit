@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <application>
+        <activity android:name=".platform.LaunchActivity">
+            <!--
+                PICO Emulator 0.13.0 throttles a Mixed Stage to 24 FPS when these
+                otherwise-ignored values are zero. Keep the production manifest
+                standards-compliant and apply this compatibility override only to
+                debug/emulator APKs.
+            -->
+            <meta-data
+                android:name="pico.spatial.stage.immersion"
+                android:value="100"
+                tools:replace="android:value" />
+            <meta-data
+                android:name="pico.spatial.stage.immersion_min"
+                android:value="100"
+                tools:replace="android:value" />
+            <meta-data
+                android:name="pico.spatial.stage.immersion_max"
+                android:value="100"
+                tools:replace="android:value" />
+        </activity>
+    </application>
+
+</manifest>

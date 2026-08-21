@@ -1,0 +1,81 @@
+{
+  "collection": "Drum Kit Samples",
+  "author": "CM Music / CarbonMonoxideMusic",
+  "sourceUrl": "https://ccmixter.org/files/CarbonMonoxideMusic/23425",
+  "license": "CC0-1.0",
+  "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+  "samples": [
+    {
+      "drumId": "CRASH",
+      "file": "drums/crash.wav",
+      "originalFile": "Crash Cymbal.wav",
+      "sha256": "2be4c930e7d4e2d97e9167a73cb17838164f6c45d236863cc6e9ac2fa08a75ef",
+      "license": "CC0-1.0",
+      "sourceUrl": "https://ccmixter.org/files/CarbonMonoxideMusic/23425",
+      "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/"
+    },
+    {
+      "drumId": "RIDE",
+      "file": "drums/ride.wav",
+      "originalFile": "Ride Cymbal.wav",
+      "sha256": "247bf776dc81c0822e1dc9a4979411310748bdfbc00201e9201860c6ef4c9c72",
+      "license": "CC0-1.0",
+      "sourceUrl": "https://ccmixter.org/files/CarbonMonoxideMusic/23425",
+      "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/"
+    },
+    {
+      "drumId": "HI_HAT",
+      "file": "drums/hi_hat.wav",
+      "originalFile": "Closed Hat.wav",
+      "sha256": "986258c1254a32acce1df90ddc8363455f23d5352b47348d15d0210d4d4f0a7a",
+      "license": "CC0-1.0",
+      "sourceUrl": "https://ccmixter.org/files/CarbonMonoxideMusic/23425",
+      "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/"
+    },
+    {
+      "drumId": "TOM_HIGH",
+      "file": "drums/tom_high.wav",
+      "originalFile": "Sample 2.wav",
+      "sha256": "40c0f7c3aa32bd63db315eb7db643d8a28119456285e199577ac56a91f0ee779",
+      "license": "CC0-1.0",
+      "sourceUrl": "https://ccmixter.org/files/CarbonMonoxideMusic/23425",
+      "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/"
+    },
+    {
+      "drumId": "TOM_MID",
+      "file": "drums/tom_mid.wav",
+      "originalFile": "Mid Tom.wav",
+      "sha256": "010d92d0dabd4e8ac57f4ef2af58732790c874a7f8c572cafd41ba2c0c480693",
+      "license": "CC0-1.0",
+      "sourceUrl": "https://ccmixter.org/files/CarbonMonoxideMusic/23425",
+      "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/"
+    },
+    {
+      "drumId": "SNARE",
+      "file": "drums/snare.wav",
+      "originalFile": "Sample 1.wav",
+      "sha256": "1652ebf87276583b88f226408d984a3a9c2a6e8c6c08dfc918df7fd2b6945403",
+      "license": "CC0-1.0",
+      "sourceUrl": "https://ccmixter.org/files/CarbonMonoxideMusic/23425",
+      "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/"
+    },
+    {
+      "drumId": "TOM_FLOOR",
+      "file": "drums/tom_floor.wav",
+      "originalFile": "Floor Tom.wav",
+      "sha256": "9683506dd28d74d2e46a152461037565a6103c0d0256eb8c69d23169b5183dbc",
+      "license": "CC0-1.0",
+      "sourceUrl": "https://ccmixter.org/files/CarbonMonoxideMusic/23425",
+      "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/"
+    },
+    {
+      "drumId": "KICK",
+      "file": "drums/kick.wav",
+      "originalFile": "Kick.wav",
+      "sha256": "9faec713205af418607c1b06b232e271ecc94773a548837afc105fdfe8a2b8b9",
+      "license": "CC0-1.0",
+      "sourceUrl": "https://ccmixter.org/files/CarbonMonoxideMusic/23425",
+      "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/"
+    }
+  ]
+}

@@ -1,0 +1,25 @@
+{
+  "models": [
+    {
+      "file": "models/drum_kit.glb",
+      "title": "Drum Kit",
+      "author": "smoj",
+      "sourceUrl": "https://poly.pizza/m/7FCPjy-3xmz",
+      "license": "CC-BY-3.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by/3.0/",
+      "sha256": "4893bf0cd89542862298456be893bce24742947d31c8293230b817e91629d5de",
+      "triangles": 3776
+    },
+    {
+      "file": "models/drum_kit_refined.glb",
+      "title": "Drum Kit — refined PBR material variant",
+      "author": "smoj; material refinement by project team",
+      "sourceUrl": "https://poly.pizza/m/7FCPjy-3xmz",
+      "license": "CC-BY-3.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by/3.0/",
+      "derivedFrom": "models/drum_kit.glb",
+      "sha256": "21c5ef9a7a4019346eedbbfb8cca3c3c084eec5ed3f7ac94106a0928901d2108",
+      "triangles": 3776
+    }
+  ]
+}

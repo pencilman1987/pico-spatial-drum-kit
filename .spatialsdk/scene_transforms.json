@@ -1,0 +1,28 @@
+{
+  "sceneContext": "A seated, human-scale acoustic drum kit positioned in front of the player. The selected mobile-ready model contains a complete kit with stands, cymbals, pedals, and throne. Its measured raw bounds already have realistic proportions; a uniform 1.40 scale makes the cymbal height suitable for seated play while keeping the nearest playable parts inside natural arm-plus-stick reach. The refined asset changes PBR materials only and preserves the measured source geometry.",
+  "sceneDimensionsMeters": {
+    "width": 2.24,
+    "height": 1.2208,
+    "depth": 1.75
+  },
+  "elements": [
+    {
+      "id": "production_drum_kit",
+      "asset": "app/src/main/assets/models/drum_kit_refined.glb",
+      "originalBoundingBoxMeters": {
+        "minimum": [-0.8828, -0.3627, -0.6687],
+        "maximum": [0.7172, 0.5092, 0.5813],
+        "dimensions": [1.6, 0.872, 1.25]
+      },
+      "transformation": {
+        "translationMeters": [0.11592, 0.50778, -0.93882],
+        "rotationEulerDegrees": [0.0, 0.0, 0.0],
+        "scale": [1.4, 1.4, 1.4]
+      },
+      "finalBoundingBoxMeters": {
+        "dimensions": [2.24, 1.2208, 1.75],
+        "center": [0.0, 0.6104, -1.0]
+      }
+    }
+  ]
+}
