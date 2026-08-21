@@ -61,7 +61,7 @@ fun DrumHud(
         modifier =
             Modifier
                 .size(
-                    width = if (uiState.showCalibration) 760.dp else 480.dp,
+                    width = if (uiState.showCalibration) 760.dp else 620.dp,
                     height = if (uiState.showCalibration) 690.dp else 190.dp,
                 ).clip(RoundedCornerShape(24.dp))
                 .backgroundMaterial(enable = true, style = Material.Regular)
@@ -117,6 +117,7 @@ fun DrumHud(
             )
         } else {
             Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                Button(onClick = { onEvent(DrumEvent.OpenPlacement) }) { Text("调整鼓组位置") }
                 Button(onClick = { onEvent(DrumEvent.OpenCalibration) }) { Text("校准与设置") }
                 Button(
                     enabled = audioStatus.isReady,
@@ -154,6 +155,9 @@ private fun CalibrationContent(
         Button(onClick = { onEvent(DrumEvent.SelectCalibrationPage(CalibrationPage.SURFACES)) }) {
             Text("鼓面位置")
         }
+        Button(onClick = { onEvent(DrumEvent.SelectCalibrationPage(CalibrationPage.PLACEMENT)) }) {
+            Text("鼓组位置")
+        }
     }
     Spacer(Modifier.height(10.dp))
     when (uiState.calibrationPage) {
@@ -179,6 +183,12 @@ private fun CalibrationContent(
                 profile = profile,
                 selectedDrum = uiState.selectedDrum,
                 onEvent = onEvent,
+                onProfileChange = onProfileChange,
+            )
+
+        CalibrationPage.PLACEMENT ->
+            KitPlacement(
+                profile = profile,
                 onProfileChange = onProfileChange,
             )
     }
@@ -239,7 +249,7 @@ private fun GestureCalibration(
         onValueChange = { onProfileChange(profile.copy(fullVelocitySpeed = it)) },
     )
     MetricSlider(
-        label = "虚拟鼓槌长度 ${millimeters(profile.virtualStickLength)}",
+        label = "手势敲击延伸长度 ${millimeters(profile.virtualStickLength)}",
         value = profile.virtualStickLength,
         valueRange = 0.20f..0.45f,
         onValueChange = { onProfileChange(profile.copy(virtualStickLength = it)) },
@@ -323,6 +333,52 @@ private fun SurfaceCalibration(
 }
 
 @Composable
+private fun KitPlacement(
+    profile: CalibrationProfile,
+    onProfileChange: (CalibrationProfile) -> Unit,
+) {
+    val offset = profile.kitOffset
+    Text(
+        text = "调整整套鼓组和所有命中区域，改动会立即生效。",
+        color = PicoTheme.colorScheme.labelSecondary,
+        style = PicoTheme.typography.bodyMedium,
+        textAlign = TextAlign.Center,
+    )
+    Spacer(Modifier.height(6.dp))
+    Text(
+        text = "+X 向右 · +Y 向上 · +Z 靠近你",
+        color = PicoTheme.colorScheme.labelTertiary,
+        style = PicoTheme.typography.bodySmall,
+        textAlign = TextAlign.Center,
+    )
+    KitOffsetSlider(
+        label = "左右 X",
+        value = offset.x,
+        onValueChange = { value ->
+            onProfileChange(profile.copy(kitOffset = Vector3(value, offset.y, offset.z)))
+        },
+    )
+    KitOffsetSlider(
+        label = "上下 Y",
+        value = offset.y,
+        onValueChange = { value ->
+            onProfileChange(profile.copy(kitOffset = Vector3(offset.x, value, offset.z)))
+        },
+    )
+    KitOffsetSlider(
+        label = "远近 Z",
+        value = offset.z,
+        onValueChange = { value ->
+            onProfileChange(profile.copy(kitOffset = Vector3(offset.x, offset.y, value)))
+        },
+    )
+    Spacer(Modifier.height(6.dp))
+    Button(onClick = { onProfileChange(profile.copy(kitOffset = Vector3.ZERO)) }) {
+        Text("一键居中到默认位置")
+    }
+}
+
+@Composable
 private fun MetricSlider(
     label: String,
     value: Float,
@@ -356,6 +412,20 @@ private fun SurfaceOffsetSlider(
         valueRange = -0.35f..0.35f,
         onValueChange = onValueChange,
         modifier = modifier,
+    )
+}
+
+@Composable
+private fun KitOffsetSlider(
+    label: String,
+    value: Float,
+    onValueChange: (Float) -> Unit,
+) {
+    MetricSlider(
+        label = "$label ${signedCentimeters(value)}",
+        value = value,
+        valueRange = -0.5f..0.5f,
+        onValueChange = onValueChange,
     )
 }
 

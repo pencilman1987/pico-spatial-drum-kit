@@ -25,6 +25,16 @@ class DrumViewModelTest {
     }
 
     @Test
+    fun openPlacementExpandsHudOnPlacementPage() {
+        val viewModel = DrumViewModel()
+
+        viewModel.onEvent(DrumEvent.OpenPlacement)
+
+        assertTrue(viewModel.state.value.showCalibration)
+        assertEquals(CalibrationPage.PLACEMENT, viewModel.state.value.calibrationPage)
+    }
+
+    @Test
     fun closeCalibrationReturnsToPerformanceHud() {
         val viewModel = DrumViewModel()
         viewModel.onEvent(DrumEvent.OpenCalibration)

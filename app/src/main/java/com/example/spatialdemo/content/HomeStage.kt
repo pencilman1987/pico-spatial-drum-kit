@@ -76,7 +76,10 @@ fun HomeStage(
         tracker.updateCalibration(calibration)
         detector.update(calibration, surfaces)
         audio.updateSurfaces(surfaces)
-        sceneRef.get()?.applySurfaces(surfaces)
+        sceneRef.get()?.apply {
+            applyKitOffset(calibration.kitOffset)
+            applySurfaces(surfaces)
+        }
     }
 
     LaunchedEffect(uiState.showCalibration) {
@@ -88,7 +91,7 @@ fun HomeStage(
         modelReady = scene.loadProductionModel()
         performanceStatus =
             if (modelReady) {
-                "握紧双手鼓槌，向下穿过鼓面"
+                "握拳模拟握槌，向下穿过鼓面"
             } else {
                 "正式模型加载失败，已启用安全鼓面"
             }
@@ -118,7 +121,6 @@ fun HomeStage(
                 detector.consumeObservedApproachSpeed()?.let { speed ->
                     if (speed.isFinite() && speed > 0f) speedSamples = (speedSamples + speed).takeLast(20)
                 }
-                sceneRef.get()?.updateHands(frame)
             }
             val latestAudioStatus = audio.status()
             if (latestAudioStatus != audioStatus) audioStatus = latestAudioStatus
@@ -143,9 +145,12 @@ fun HomeStage(
     SpatialView(
         initial = { content, attachments ->
             sceneRef.set(DrumScene.create(content))
-            sceneRef.get()?.applySurfaces(DrumKit.surfaces(calibration))
+            sceneRef.get()?.apply {
+                applyKitOffset(calibration.kitOffset)
+                applySurfaces(DrumKit.surfaces(calibration))
+            }
             attachments.entity(id = "status")?.apply {
-                components[TransformComponent::class.java]?.position = Vector3(0.72f, 1.48f, -1.55f)
+                components[TransformComponent::class.java]?.position = Vector3(0f, 1.52f, -1.55f)
                 content.addEntity(this)
                 val viewerFacing =
                     LookAtComponent().apply {

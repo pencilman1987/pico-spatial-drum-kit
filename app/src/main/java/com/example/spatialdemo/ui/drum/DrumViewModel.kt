@@ -14,6 +14,8 @@ class DrumViewModel : ViewModel() {
         _state.update { current ->
             when (event) {
                 DrumEvent.OpenCalibration -> current.copy(showCalibration = true)
+                DrumEvent.OpenPlacement ->
+                    current.copy(showCalibration = true, calibrationPage = CalibrationPage.PLACEMENT)
                 DrumEvent.CloseCalibration -> current.copy(showCalibration = false)
                 is DrumEvent.SelectCalibrationPage -> current.copy(calibrationPage = event.page)
                 is DrumEvent.SelectDrum -> current.copy(selectedDrum = event.drumId)

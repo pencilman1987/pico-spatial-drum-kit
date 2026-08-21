@@ -2,7 +2,7 @@
 
 ## What this project does
 
-This is the native PICO Spatial SDK version of the adjacent legacy web drum simulator. It renders an eight-piece drum kit in a Mixed Stage, reads both hands through Tracking Pack, recognizes a grip/pinch as holding a virtual stick, and triggers a drum when the swept stick tip crosses a drum surface with sufficient velocity.
+This is the native PICO Spatial SDK version of the adjacent legacy web drum simulator. It renders an eight-piece drum kit in a Mixed Stage, reads both hands through Tracking Pack, recognizes a grip/pinch as an invisible strike extension, and triggers a drum when that swept point crosses a drum surface with sufficient velocity. No drum-stick geometry is rendered.
 
 The original web project at `../架子鼓模拟器/` is reference-only and must never be overwritten by changes in this project.
 
@@ -13,6 +13,7 @@ The original web project at `../架子鼓模拟器/` is reference-only and must 
 - `interaction/DrumHitDetector.kt` is a pure, unit-tested swept-surface detector.
 - `tracking/HandTrackingController.kt` is the only class that reads Tracking Pack callbacks. It copies data off the provider thread and never mutates UI or ECS state there.
 - `content/DrumScene.kt` owns ECS entities and resources.
+- `CalibrationProfile.kitOffset` moves the production model and every hit surface together; the SpatialUI placement page edits it live and persists it with the rest of the device calibration.
 - `calibration/CalibrationProfile.kt` and `CalibrationStore.kt` own persistent device-specific thresholds and per-drum offsets.
 - `audio/DrumAudioEngine.kt` loads eight local CC0 WAV samples only after validating the license manifest and SHA-256 hashes. Its deterministic synthesized sounds are fallback-only.
 - `content/HomeStage.kt` coordinates lifecycle, UI state, hit feedback, and main-thread ECS updates.
@@ -35,7 +36,7 @@ All 2D UI must use `com.pico.spatial.ui.*`, be wrapped by `PicoTheme`, and prefe
 1. Connect a real PICO headset and complete `CALIBRATION.md`; emulator values are not accepted as device calibration.
 2. Measure acoustic end-to-end latency on the target headset/output path. The in-app metric stops at successful `SoundPool` submission.
 3. Consider PICO object audio after validating that its real-device latency is not worse than the current preloaded `SoundPool` path.
-4. Add SpatialUI recording, playback, metronome, and placement controls.
+4. Add SpatialUI recording, playback, and metronome controls.
 
 ## Production assets
 
