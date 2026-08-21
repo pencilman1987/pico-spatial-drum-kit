@@ -7,6 +7,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalContext
 import com.example.spatialdemo.audio.DrumAudioEngine
@@ -17,6 +18,7 @@ import com.example.spatialdemo.domain.model.DrumId
 import com.example.spatialdemo.domain.model.DrumKit
 import com.example.spatialdemo.domain.usecase.CalibrationUseCase
 import com.example.spatialdemo.interaction.DrumHitDetector
+import com.example.spatialdemo.interaction.HandSide
 import com.example.spatialdemo.interaction.TrackedHand
 import com.example.spatialdemo.tracking.HandTrackingController
 import com.example.spatialdemo.ui.drum.DrumEvent
@@ -43,6 +45,7 @@ fun HomeStage(
 ) {
     val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
+    val gestureModeEnabled by rememberUpdatedState(uiState.gestureModeEnabled)
     val calibrationUseCase =
         remember { CalibrationUseCase(SharedPreferencesCalibrationRepository(context)) }
     var calibration by remember { mutableStateOf(calibrationUseCase.load()) }
@@ -55,6 +58,7 @@ fun HomeStage(
     var modelReady by remember { mutableStateOf(false) }
     var audioStatus by remember { mutableStateOf(audio.status()) }
     var liveHand by remember { mutableStateOf<TrackedHand?>(null) }
+    var visibleHandSides by remember { mutableStateOf(emptySet<HandSide>()) }
     var gripPose by remember { mutableStateOf<PoseSample?>(null) }
     var openPose by remember { mutableStateOf<PoseSample?>(null) }
     var speedSamples by remember { mutableStateOf(emptyList<Float>()) }
@@ -86,12 +90,25 @@ fun HomeStage(
         sceneRef.get()?.setCalibrationOverlayVisible(uiState.showCalibration)
     }
 
+    LaunchedEffect(uiState.gestureModeEnabled) {
+        detector.reset()
+        if (!uiState.gestureModeEnabled) {
+            performanceStatus = "手势敲鼓已暂停"
+        } else if (modelReady) {
+            performanceStatus = "捏合或握拳模拟握槌，向下穿过鼓面"
+        }
+    }
+
     LaunchedEffect(Unit) {
         val scene = waitForScene(sceneRef)
         modelReady = scene.loadProductionModel()
         performanceStatus =
             if (modelReady) {
-                "握拳模拟握槌，向下穿过鼓面"
+                if (gestureModeEnabled) {
+                    "捏合或握拳模拟握槌，向下穿过鼓面"
+                } else {
+                    "手势敲鼓已暂停"
+                }
             } else {
                 "正式模型加载失败，已启用安全鼓面"
             }
@@ -103,8 +120,16 @@ fun HomeStage(
             val frame = tracker.latest()
             if (frame != null && frame.timestampNanos != lastTimestamp) {
                 lastTimestamp = frame.timestampNanos
-                liveHand = frame.hands.firstOrNull()
-                detector.process(frame).forEach { hit ->
+                val sceneFrame = sceneRef.get()?.trackingFrameToScene(frame) ?: frame
+                liveHand = sceneFrame.hands.firstOrNull()
+                visibleHandSides = sceneFrame.hands.mapTo(mutableSetOf()) { it.side }
+                val hits =
+                    if (gestureModeEnabled && sceneRef.get() != null) {
+                        detector.process(sceneFrame)
+                    } else {
+                        emptyList()
+                    }
+                hits.forEach { hit ->
                     val telemetry = audio.play(hit.drumId, hit.intensity, frame.timestampNanos)
                     if (telemetry.submitted) {
                         latencySamples = (latencySamples + telemetry.trackingToSubmissionMs).takeLast(30)
@@ -118,8 +143,12 @@ fun HomeStage(
                             "${hit.drumId.displayName} 已命中 · 音频仍在加载"
                         }
                 }
-                detector.consumeObservedApproachSpeed()?.let { speed ->
-                    if (speed.isFinite() && speed > 0f) speedSamples = (speedSamples + speed).takeLast(20)
+                if (gestureModeEnabled) {
+                    detector.consumeObservedApproachSpeed()?.let { speed ->
+                        if (speed.isFinite() && speed > 0f) {
+                            speedSamples = (speedSamples + speed).takeLast(20)
+                        }
+                    }
                 }
             }
             val latestAudioStatus = audio.status()
@@ -167,6 +196,7 @@ fun HomeStage(
                     uiState = uiState,
                     calibration = calibration,
                     trackingStatus = trackingStatus,
+                    handPresenceStatus = handPresenceLabel(visibleHandSides),
                     performanceStatus = performanceStatus,
                     audioStatus = audioStatus,
                     modelReady = modelReady,
@@ -227,6 +257,14 @@ private suspend fun waitForScene(sceneRef: AtomicReference<DrumScene?>): DrumSce
     while (sceneRef.get() == null) delay(16)
     return requireNotNull(sceneRef.get())
 }
+
+private fun handPresenceLabel(sides: Set<HandSide>): String =
+    when (sides) {
+        setOf(HandSide.LEFT, HandSide.RIGHT) -> "左右手已识别"
+        setOf(HandSide.LEFT) -> "左手已识别"
+        setOf(HandSide.RIGHT) -> "右手已识别"
+        else -> "等待双手"
+    }
 
 private fun TrackedHand.toPoseSample(): PoseSample? =
     if (pinchDistanceMeters.isFinite() && averageCurlDistanceMeters.isFinite()) {

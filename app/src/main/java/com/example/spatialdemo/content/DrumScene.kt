@@ -2,7 +2,9 @@ package com.example.spatialdemo.content
 
 import com.example.spatialdemo.domain.model.DrumId
 import com.example.spatialdemo.domain.model.DrumKit
+import com.example.spatialdemo.domain.model.DrumKitModelPlacement
 import com.example.spatialdemo.domain.model.DrumSurface
+import com.example.spatialdemo.interaction.HandFrame
 import com.pico.spatial.core.container.SpatialViewContent
 import com.pico.spatial.core.ecs.CollisionComponent
 import com.pico.spatial.core.ecs.Entity
@@ -19,6 +21,8 @@ import com.pico.spatial.core.math.Color4
 import com.pico.spatial.core.math.EulerAngles
 import com.pico.spatial.core.math.Vector3
 import kotlin.math.PI
+import kotlin.math.asin
+import kotlin.math.atan2
 import kotlin.math.sin
 
 class DrumScene private constructor(
@@ -26,6 +30,7 @@ class DrumScene private constructor(
     private val drumEntities: Map<DrumId, Entity>,
     private val drumMaterials: Map<DrumId, UnlitMaterial>,
     private val cymbalIds: Set<DrumId>,
+    private val trackingSpaceRoot: Entity,
     private val resources: List<AutoCloseable>,
 ) {
     private data class HitPulse(
@@ -48,9 +53,14 @@ class DrumScene private constructor(
                 Entity.loadSuspend("asset://models/drum_kit_refined.glb").apply {
                     setName("PRODUCTION_DRUM_KIT")
                     components[TransformComponent::class.java]?.apply {
-                        position = PRODUCTION_MODEL_POSITION + kitOffset
-                        eulerAngles = EulerAngles(0f, 0f, 0f)
-                        scaleVector = Vector3(1.4f, 1.4f, 1.4f)
+                        position = DrumKitModelPlacement.modelPosition + kitOffset
+                        eulerAngles = EulerAngles(0f, DrumKitModelPlacement.yawDegrees, 0f)
+                        scaleVector =
+                            Vector3(
+                                DrumKitModelPlacement.scale,
+                                DrumKitModelPlacement.scale,
+                                DrumKitModelPlacement.scale,
+                            )
                     }
                     components.set(GroundShadowComponent(true, true))
                     content.addEntity(this)
@@ -66,7 +76,7 @@ class DrumScene private constructor(
     fun applyKitOffset(offset: Vector3) {
         kitOffset = offset
         productionModel?.components?.get(TransformComponent::class.java)?.position =
-            PRODUCTION_MODEL_POSITION + offset
+            DrumKitModelPlacement.modelPosition + offset
     }
 
     fun setCalibrationOverlayVisible(visible: Boolean) {
@@ -78,15 +88,22 @@ class DrumScene private constructor(
         surfaces.forEach { surface ->
             drumEntities[surface.id]?.components[TransformComponent::class.java]?.apply {
                 position = surface.center
-                eulerAngles =
-                    if (surface.normal == Vector3.BACK) {
-                        EulerAngles(90f, 0f, 0f)
-                    } else {
-                        EulerAngles(0f, 0f, 0f)
-                    }
+                eulerAngles = surfaceOverlayRotation(surface.normal)
             }
         }
     }
+
+    /** Converts Tracking Pack world-space points into this SpatialView's local meter space. */
+    fun trackingFrameToScene(frame: HandFrame): HandFrame =
+        frame.copy(
+            hands =
+                frame.hands.map { hand ->
+                    hand.copy(
+                        stickBase = trackingSpaceRoot.convertPositionFrom(hand.stickBase, null),
+                        stickTip = trackingSpaceRoot.convertPositionFrom(hand.stickTip, null),
+                    )
+                },
+        )
 
     fun registerHit(drumId: DrumId, intensity: Float, nowNanos: Long) {
         pulses[drumId] =
@@ -122,6 +139,7 @@ class DrumScene private constructor(
     fun destroy() {
         drumEntities.values.forEach { it.destroy(true) }
         productionModel?.destroy(true)
+        trackingSpaceRoot.destroy(true)
         resources.asReversed().forEach { runCatching { it.close() } }
     }
 
@@ -135,14 +153,17 @@ class DrumScene private constructor(
         fun create(content: SpatialViewContent): DrumScene {
             val resources = mutableListOf<AutoCloseable>()
             val materials = mutableMapOf<DrumId, UnlitMaterial>()
+            val trackingSpaceRoot =
+                Entity().apply {
+                    setName("TRACKING_SPACE_ROOT")
+                    content.addEntity(this)
+                }
             val drumEntities =
                 DrumKit.surfaces.associate { surface ->
                     val mesh = MeshResource.createCylinder(surface.radius, surface.depth).also(resources::add)
                     val material =
-                        UnlitMaterial.create(BlendingMode.TRANSPARENT).apply {
-                            setBaseColor(Color4.fromSRGBHex("FFFFFF00"))
-                        }.also {
-                            resources += it
+                        globalDrumMaterial(surface.id).also {
+                            it.setBaseColor(Color4.fromSRGBHex("FFFFFF00"))
                             materials[surface.id] = it
                         }
                     val collisionShape =
@@ -155,7 +176,7 @@ class DrumScene private constructor(
                             setName(surface.id.name)
                             components[TransformComponent::class.java]?.apply {
                                 position = surface.center
-                                if (surface.normal == Vector3.BACK) eulerAngles = EulerAngles(90f, 0f, 0f)
+                                eulerAngles = surfaceOverlayRotation(surface.normal)
                             }
                             components.set(
                                 CollisionComponent(
@@ -174,12 +195,30 @@ class DrumScene private constructor(
                 drumEntities = drumEntities,
                 drumMaterials = materials,
                 cymbalIds = DrumKit.surfaces.filter { it.isCymbal }.mapTo(mutableSetOf()) { it.id },
+                trackingSpaceRoot = trackingSpaceRoot,
                 resources = resources,
             )
         }
 
-        private val PRODUCTION_MODEL_POSITION = Vector3(0.11592f, 0.50778f, -0.93882f)
         private const val HIT_PULSE_NANOS = 140_000_000L
+
+        // The SDK applies material mutations asynchronously. Keeping these eight mutable
+        // materials global prevents Stage teardown from closing one while a queued color
+        // update is still being executed; they intentionally live for the app process.
+        private val globalDrumMaterials = mutableMapOf<DrumId, UnlitMaterial>()
+
+        private fun globalDrumMaterial(id: DrumId): UnlitMaterial =
+            globalDrumMaterials.getOrPut(id) {
+                UnlitMaterial.create(BlendingMode.TRANSPARENT).apply { toGlobal() }
+            }
+
+        /** Rotates a cylinder's local +Y axis onto the measured drum-surface normal. */
+        private fun surfaceOverlayRotation(normal: Vector3): EulerAngles {
+            val unit = normal.normalize()
+            val pitch = atan2(unit.z, unit.y) * 180f / PI.toFloat()
+            val roll = -asin(unit.x.coerceIn(-1f, 1f)) * 180f / PI.toFloat()
+            return EulerAngles(pitch, 0f, roll)
+        }
     }
 
     private fun overlayColor(id: DrumId, state: Int): Color4 =

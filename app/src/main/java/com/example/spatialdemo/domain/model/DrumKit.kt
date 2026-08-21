@@ -26,74 +26,76 @@ data class DrumSurface(
 )
 
 object DrumKit {
+    private const val PLAYABLE_RADIUS_INSET = 0.94f
+
     val baseSurfaces =
         listOf(
-            DrumSurface(
+            measuredSurface(
                 DrumId.CRASH,
-                Vector3(-0.62f, 1.38f, -0.92f),
-                Vector3.UP,
-                0.22f,
-                0.025f,
-                Color4.fromSRGBHex("E7B84BFF"),
+                sourceCenter = Vector3(0.38362f, 0.44619f, 0.12016f),
+                sourceNormal = Vector3(-0.20901f, 0.88232f, -0.42170f),
+                sourceRadius = 0.14627f,
+                depth = 0.025f,
+                color = Color4.fromSRGBHex("E7B84BFF"),
                 isCymbal = true,
             ),
-            DrumSurface(
+            measuredSurface(
                 DrumId.RIDE,
-                Vector3(0.62f, 1.36f, -0.96f),
-                Vector3.UP,
-                0.24f,
-                0.025f,
-                Color4.fromSRGBHex("D7A83FFF"),
+                sourceCenter = Vector3(-0.53527f, 0.26424f, -0.05126f),
+                sourceNormal = Vector3(0.01883f, 0.99541f, -0.09385f),
+                sourceRadius = 0.21908f,
+                depth = 0.025f,
+                color = Color4.fromSRGBHex("D7A83FFF"),
                 isCymbal = true,
             ),
-            DrumSurface(
+            measuredSurface(
                 DrumId.HI_HAT,
-                Vector3(-0.64f, 1.04f, -0.58f),
-                Vector3.UP,
-                0.18f,
-                0.035f,
-                Color4.fromSRGBHex("C9942FFF"),
+                sourceCenter = Vector3(0.51506f, 0.21747f, -0.08427f),
+                sourceNormal = Vector3(-0.11893f, 0.98839f, -0.09453f),
+                sourceRadius = 0.12225f,
+                depth = 0.035f,
+                color = Color4.fromSRGBHex("C9942FFF"),
                 isCymbal = true,
             ),
-            DrumSurface(
+            measuredSurface(
                 DrumId.TOM_HIGH,
-                Vector3(-0.25f, 1.16f, -0.86f),
-                Vector3.UP,
-                0.18f,
-                0.16f,
-                Color4.fromSRGBHex("D8DEE7FF"),
+                sourceCenter = Vector3(0.10147f, 0.31324f, 0.10433f),
+                sourceNormal = Vector3(0.09852f, 0.73700f, -0.66868f),
+                sourceRadius = 0.09058f,
+                depth = 0.16f,
+                color = Color4.fromSRGBHex("D8DEE7FF"),
             ),
-            DrumSurface(
+            measuredSurface(
                 DrumId.TOM_MID,
-                Vector3(0.24f, 1.14f, -0.88f),
-                Vector3.UP,
-                0.19f,
-                0.18f,
-                Color4.fromSRGBHex("BFC8D5FF"),
+                sourceCenter = Vector3(-0.13972f, 0.32392f, 0.06502f),
+                sourceNormal = Vector3(0.25739f, 0.56072f, -0.78698f),
+                sourceRadius = 0.09800f,
+                depth = 0.18f,
+                color = Color4.fromSRGBHex("BFC8D5FF"),
             ),
-            DrumSurface(
+            measuredSurface(
                 DrumId.SNARE,
-                Vector3(-0.30f, 0.86f, -0.54f),
-                Vector3.UP,
-                0.20f,
-                0.17f,
-                Color4.fromSRGBHex("EDF0F4FF"),
+                sourceCenter = Vector3(0.22663f, 0.11986f, -0.12977f),
+                sourceNormal = Vector3(0.03178f, 0.99947f, 0.00743f),
+                sourceRadius = 0.12852f,
+                depth = 0.17f,
+                color = Color4.fromSRGBHex("EDF0F4FF"),
             ),
-            DrumSurface(
+            measuredSurface(
                 DrumId.TOM_FLOOR,
-                Vector3(0.52f, 0.83f, -0.58f),
-                Vector3.UP,
-                0.22f,
-                0.30f,
-                Color4.fromSRGBHex("9DA8B7FF"),
+                sourceCenter = Vector3(-0.29982f, 0.08210f, -0.20105f),
+                sourceNormal = Vector3(0.13106f, 0.99137f, 0.00104f),
+                sourceRadius = 0.13353f,
+                depth = 0.30f,
+                color = Color4.fromSRGBHex("9DA8B7FF"),
             ),
-            DrumSurface(
+            measuredSurface(
                 DrumId.KICK,
-                Vector3(0.08f, 0.48f, -0.93f),
-                Vector3.BACK,
-                0.28f,
-                0.28f,
-                Color4.fromSRGBHex("27303EFF"),
+                sourceCenter = Vector3(-0.02253f, -0.10502f, -0.02912f),
+                sourceNormal = Vector3(0.10564f, -0.01505f, -0.99429f),
+                sourceRadius = 0.20638f,
+                depth = 0.28f,
+                color = Color4.fromSRGBHex("27303EFF"),
             ),
         )
 
@@ -106,4 +108,23 @@ object DrumKit {
                 center = surface.center + profile.kitOffset + (profile.surfaceOffsets[surface.id] ?: Vector3.ZERO),
             )
         }
+
+    private fun measuredSurface(
+        id: DrumId,
+        sourceCenter: Vector3,
+        sourceNormal: Vector3,
+        sourceRadius: Float,
+        depth: Float,
+        color: Color4,
+        isCymbal: Boolean = false,
+    ) =
+        DrumSurface(
+            id = id,
+            center = DrumKitModelPlacement.sourcePointInStage(sourceCenter),
+            normal = DrumKitModelPlacement.sourceDirectionInStage(sourceNormal),
+            radius = sourceRadius * DrumKitModelPlacement.scale * PLAYABLE_RADIUS_INSET,
+            depth = depth,
+            color = color,
+            isCymbal = isCymbal,
+        )
 }

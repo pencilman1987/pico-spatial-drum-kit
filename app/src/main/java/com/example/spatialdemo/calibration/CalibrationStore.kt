@@ -10,14 +10,20 @@ class CalibrationStore(context: Context) {
 
     fun load(): CalibrationProfile {
         val defaults = CalibrationProfile()
+        val layoutIsCurrent =
+            preferences.getInt(LAYOUT_SCHEMA_KEY, 0) == CURRENT_LAYOUT_SCHEMA
         val surfaceOffsets =
-            DrumId.entries.associateWith { id ->
-                Vector3(
-                    preferences.getFloat("surface_${id.name}_x", 0f),
-                    preferences.getFloat("surface_${id.name}_y", 0f),
-                    preferences.getFloat("surface_${id.name}_z", 0f),
-                )
-            }.filterValues { it != Vector3.ZERO }
+            if (layoutIsCurrent) {
+                DrumId.entries.associateWith { id ->
+                    Vector3(
+                        preferences.getFloat("surface_${id.name}_x", 0f),
+                        preferences.getFloat("surface_${id.name}_y", 0f),
+                        preferences.getFloat("surface_${id.name}_z", 0f),
+                    )
+                }.filterValues { it != Vector3.ZERO }
+            } else {
+                emptyMap()
+            }
 
         return CalibrationProfile(
             minimumHitSpeed = preferences.getFloat("minimum_hit_speed", defaults.minimumHitSpeed),
@@ -28,13 +34,18 @@ class CalibrationStore(context: Context) {
             rearmDistance = preferences.getFloat("rearm_distance", defaults.rearmDistance),
             cooldownMillis = preferences.getLong("cooldown_millis", defaults.cooldownMillis),
             kitOffset =
-                Vector3(
-                    preferences.getFloat("kit_offset_x", 0f),
-                    preferences.getFloat("kit_offset_y", 0f),
-                    preferences.getFloat("kit_offset_z", 0f),
-                ),
+                if (layoutIsCurrent) {
+                    Vector3(
+                        preferences.getFloat("kit_offset_x", 0f),
+                        preferences.getFloat("kit_offset_y", 0f),
+                        preferences.getFloat("kit_offset_z", 0f),
+                    )
+                } else {
+                    Vector3.ZERO
+                },
             surfaceOffsets = surfaceOffsets,
-            calibratedOnDevice = preferences.getBoolean("calibrated_on_device", false),
+            calibratedOnDevice =
+                layoutIsCurrent && preferences.getBoolean("calibrated_on_device", false),
             measuredSoftwareLatencyMs =
                 if (preferences.contains("software_latency_ms")) {
                     preferences.getFloat("software_latency_ms", 0f)
@@ -57,6 +68,7 @@ class CalibrationStore(context: Context) {
             putFloat("kit_offset_x", value.kitOffset.x)
             putFloat("kit_offset_y", value.kitOffset.y)
             putFloat("kit_offset_z", value.kitOffset.z)
+            putInt(LAYOUT_SCHEMA_KEY, CURRENT_LAYOUT_SCHEMA)
             putBoolean("calibrated_on_device", value.calibratedOnDevice)
             value.measuredSoftwareLatencyMs?.let { putFloat("software_latency_ms", it) }
                 ?: remove("software_latency_ms")
@@ -77,5 +89,7 @@ class CalibrationStore(context: Context) {
 
     private companion object {
         const val PREFERENCES_NAME = "spatial_drum_calibration_v1"
+        const val LAYOUT_SCHEMA_KEY = "layout_schema"
+        const val CURRENT_LAYOUT_SCHEMA = 2
     }
 }

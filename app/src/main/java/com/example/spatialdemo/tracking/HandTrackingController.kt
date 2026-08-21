@@ -2,6 +2,7 @@ package com.example.spatialdemo.tracking
 
 import com.example.spatialdemo.calibration.CalibrationProfile
 import com.example.spatialdemo.interaction.HandFrame
+import com.example.spatialdemo.interaction.HandGestureRecognizer
 import com.example.spatialdemo.interaction.HandSide
 import com.example.spatialdemo.interaction.TrackedHand
 import com.pico.spatial.core.math.Vector3
@@ -54,10 +55,8 @@ class HandTrackingController {
 
         val pinchDistance = Vector3.distance(indexTip, thumbTip)
         val curlDistances = listOf(middleTip, ringTip, littleTip).map { Vector3.distance(it, palm) }
-        val pinch = pinchDistance < calibration.pinchGripThreshold
-        val curledCount =
-            curlDistances.count { it < calibration.curlGripThreshold }
-        val gripActive = pinch || curledCount >= 2
+        val curledCount = curlDistances.count { it < calibration.curlGripThreshold }
+        val gripActive = HandGestureRecognizer.isGripActive(pinchDistance, curlDistances, calibration)
 
         val handAxis = indexMetacarpal - wrist
         val direction = if (handAxis.length() > 0.001f) handAxis.normalize() else (indexTip - palm).normalize()
