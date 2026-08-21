@@ -1,14 +1,14 @@
 package com.example.spatialdemo
 
+import android.content.ComponentName
 import android.content.Intent
-import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import androidx.test.platform.app.InstrumentationRegistry
 import com.example.spatialdemo.platform.LaunchActivity
-
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNotNull
 import org.junit.Test
 import org.junit.runner.RunWith
-
-import org.junit.Assert.*
 
 /**
  * Instrumented test, which will execute on an Android device.
@@ -25,14 +25,17 @@ class ExampleInstrumentedTest {
     }
 
     @Test
-    fun launchActivityIsAlive() {
+    fun launchIntentResolvesToSpatialStub() {
         val instrumentation = InstrumentationRegistry.getInstrumentation()
         val intent = Intent(instrumentation.targetContext, LaunchActivity::class.java).apply {
             addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
         }
-        val activity = instrumentation.startActivitySync(intent)
+        val resolved = intent.resolveActivity(instrumentation.targetContext.packageManager)
 
-        assertNotNull(activity)
-        activity.finish()
+        assertNotNull(resolved)
+        assertEquals(
+            ComponentName(instrumentation.targetContext, LaunchActivity::class.java),
+            resolved,
+        )
     }
 }

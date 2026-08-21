@@ -1,0 +1,17 @@
+{
+  "assets": [
+    {
+      "assetPath": "app/src/main/assets/models/drum_kit_refined.glb",
+      "assetFingerprint": "sha256:21c5ef9a7a4019346eedbbfb8cca3c3c084eec5ed3f7ac94106a0928901d2108",
+      "orientationVerdict": "verified",
+      "localForwardAxis": [-0.37135, 0.0, 0.92849],
+      "localUpAxis": [0.0, 1.0, 0.0],
+      "semanticFeatures": "Forward runs from the real three-legged throne toward the midpoint of the two rack-tom playing surfaces; the hi-hat and snare are on the seated player's left.",
+      "evidenceViews": [
+        ".scratch/model-orthographic.png",
+        ".scratch/model-top-labeled.png"
+      ],
+      "confidence": "high"
+    }
+  ]
+}

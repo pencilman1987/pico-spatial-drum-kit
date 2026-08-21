@@ -1,11 +1,55 @@
 package com.example.spatialdemo.domain.model
 
 import com.example.spatialdemo.calibration.CalibrationProfile
+import com.pico.spatial.core.math.EulerAngles
 import com.pico.spatial.core.math.Vector3
 import org.junit.Assert.assertEquals
 import org.junit.Test
 
 class DrumKitPlacementTest {
+    @Test
+    fun productionModelPlacesSeatAtInitialViewerOrigin() {
+        val seatInStage = DrumKitModelPlacement.sourcePointInStage(DrumKitModelPlacement.sourceSeatCenter)
+
+        assertEquals(0f, seatInStage.x, EPSILON)
+        assertEquals(0f, seatInStage.z, EPSILON)
+        assertEquals(0.69806f, seatInStage.y, EPSILON)
+    }
+
+    @Test
+    fun productionModelFacesRackTomsStraightAhead() {
+        val playingCenter =
+            DrumKitModelPlacement.sourcePointInStage(DrumKitModelPlacement.sourcePlayingCenter)
+
+        assertEquals(0f, playingCenter.x, EPSILON)
+        assertEquals(-0.81568f, playingCenter.z, EPSILON)
+    }
+
+    @Test
+    fun placementRotationMatchesPicoEulerYawConvention() {
+        val sourceDirection = Vector3(0.23f, 0.41f, -0.67f)
+        val picoRotated =
+            EulerAngles(yaw = DrumKitModelPlacement.yawDegrees)
+                .toQuat()
+                .rotateVector(sourceDirection)
+                .normalize()
+        val placementRotated = DrumKitModelPlacement.sourceDirectionInStage(sourceDirection)
+
+        assertEquals(picoRotated.x, placementRotated.x, EPSILON)
+        assertEquals(picoRotated.y, placementRotated.y, EPSILON)
+        assertEquals(picoRotated.z, placementRotated.z, EPSILON)
+    }
+
+    @Test
+    fun measuredSurfacesMatchSeatedPlayerLayout() {
+        val surfaces = DrumKit.baseSurfaces.associateBy { it.id }
+
+        assertEquals(-0.20799f, requireNotNull(surfaces[DrumId.SNARE]).center.x, EPSILON)
+        assertEquals(0.51340f, requireNotNull(surfaces[DrumId.TOM_FLOOR]).center.x, EPSILON)
+        assertEquals(0.06358f, requireNotNull(surfaces[DrumId.KICK]).center.x, EPSILON)
+        assertEquals(-0.66951f, requireNotNull(surfaces[DrumId.KICK]).center.z, EPSILON)
+    }
+
     @Test
     fun kitOffsetMovesEveryHitSurfaceTogether() {
         val offset = Vector3(0.12f, -0.08f, 0.2f)

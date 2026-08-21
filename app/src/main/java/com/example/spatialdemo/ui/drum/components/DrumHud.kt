@@ -37,6 +37,7 @@ fun DrumHud(
     uiState: DrumUiState,
     calibration: CalibrationProfile,
     trackingStatus: String,
+    handPresenceStatus: String,
     performanceStatus: String,
     audioStatus: DrumAudioStatus,
     modelReady: Boolean,
@@ -61,8 +62,8 @@ fun DrumHud(
         modifier =
             Modifier
                 .size(
-                    width = if (uiState.showCalibration) 760.dp else 620.dp,
-                    height = if (uiState.showCalibration) 690.dp else 190.dp,
+                    width = if (uiState.showCalibration) 760.dp else 720.dp,
+                    height = if (uiState.showCalibration) 690.dp else 210.dp,
                 ).clip(RoundedCornerShape(24.dp))
                 .backgroundMaterial(enable = true, style = Material.Regular)
                 .padding(
@@ -88,8 +89,9 @@ fun DrumHud(
         Spacer(Modifier.height(4.dp))
         Text(
             text =
-                "${if (modelReady) "鼓组已就绪" else "鼓组加载中"} · Tracking: $trackingStatus · " +
-                    audioStatus.label + " · " + latencyLabel(softwareLatencyMs),
+                "${if (uiState.gestureModeEnabled) "手势敲鼓已开启" else "手势敲鼓已暂停"} · $handPresenceStatus · " +
+                    "${if (modelReady) "鼓组已就绪" else "鼓组加载中"} · " +
+                    audioStatus.label + " · " + latencyLabel(softwareLatencyMs) + " · $trackingStatus",
             color = PicoTheme.colorScheme.labelTertiary,
             style = PicoTheme.typography.bodySmall,
             textAlign = TextAlign.Center,
@@ -117,6 +119,9 @@ fun DrumHud(
             )
         } else {
             Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                Button(onClick = { onEvent(DrumEvent.ToggleGestureMode) }) {
+                    Text(if (uiState.gestureModeEnabled) "暂停手势" else "开启手势")
+                }
                 Button(onClick = { onEvent(DrumEvent.OpenPlacement) }) { Text("调整鼓组位置") }
                 Button(onClick = { onEvent(DrumEvent.OpenCalibration) }) { Text("校准与设置") }
                 Button(
@@ -164,12 +169,14 @@ private fun CalibrationContent(
         CalibrationPage.GESTURE ->
             GestureCalibration(
                 profile = profile,
+                gestureModeEnabled = uiState.gestureModeEnabled,
                 liveHand = liveHand,
                 speedSamples = speedSamples,
                 gripPoseRecorded = gripPoseRecorded,
                 openPoseRecorded = openPoseRecorded,
                 audioReady = audioReady,
                 onProfileChange = onProfileChange,
+                onToggleGestureMode = { onEvent(DrumEvent.ToggleGestureMode) },
                 onRecordGrip = onRecordGrip,
                 onRecordOpen = onRecordOpen,
                 onApplySpeedSamples = onApplySpeedSamples,
@@ -203,12 +210,14 @@ private fun CalibrationContent(
 @Composable
 private fun GestureCalibration(
     profile: CalibrationProfile,
+    gestureModeEnabled: Boolean,
     liveHand: TrackedHand?,
     speedSamples: List<Float>,
     gripPoseRecorded: Boolean,
     openPoseRecorded: Boolean,
     audioReady: Boolean,
     onProfileChange: (CalibrationProfile) -> Unit,
+    onToggleGestureMode: () -> Unit,
     onRecordGrip: () -> Unit,
     onRecordOpen: () -> Unit,
     onApplySpeedSamples: () -> Unit,
@@ -220,13 +229,17 @@ private fun GestureCalibration(
     val curl = liveHand?.averageCurlDistanceMeters?.takeIf(Float::isFinite)
     Text(
         text =
-            "实时：捏合 ${metersToMillimeters(pinch)} · 弯指 ${metersToMillimeters(curl)} · " +
+            "无需手柄 · ${if (gestureModeEnabled) "手势敲鼓已开启" else "手势敲鼓已暂停"} · " +
+                "捏合 ${metersToMillimeters(pinch)} · 弯指 ${metersToMillimeters(curl)} · " +
                 "握槌 ${if (liveHand?.gripActive == true) "是" else "否"}",
         color = PicoTheme.colorScheme.labelSecondary,
         style = PicoTheme.typography.bodyMedium,
     )
     Spacer(Modifier.height(6.dp))
     Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+        Button(onClick = onToggleGestureMode) {
+            Text(if (gestureModeEnabled) "暂停手势敲鼓" else "开启手势敲鼓")
+        }
         Button(onClick = onRecordGrip) { Text(if (gripPoseRecorded) "已记录握姿" else "记录握姿") }
         Button(onClick = onRecordOpen) { Text(if (openPoseRecorded) "已记录张手" else "记录张手") }
     }
@@ -339,7 +352,7 @@ private fun KitPlacement(
 ) {
     val offset = profile.kitOffset
     Text(
-        text = "调整整套鼓组和所有命中区域，改动会立即生效。",
+        text = "默认将你置于鼓凳中心；此处可调整整套鼓组和所有命中区域。",
         color = PicoTheme.colorScheme.labelSecondary,
         style = PicoTheme.typography.bodyMedium,
         textAlign = TextAlign.Center,
@@ -374,7 +387,7 @@ private fun KitPlacement(
     )
     Spacer(Modifier.height(6.dp))
     Button(onClick = { onProfileChange(profile.copy(kitOffset = Vector3.ZERO)) }) {
-        Text("一键居中到默认位置")
+        Text("复位到鼓凳演奏位")
     }
 }
 

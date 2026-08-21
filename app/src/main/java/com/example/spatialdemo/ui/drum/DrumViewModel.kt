@@ -13,6 +13,8 @@ class DrumViewModel : ViewModel() {
     fun onEvent(event: DrumEvent) {
         _state.update { current ->
             when (event) {
+                DrumEvent.ToggleGestureMode ->
+                    current.copy(gestureModeEnabled = !current.gestureModeEnabled)
                 DrumEvent.OpenCalibration -> current.copy(showCalibration = true)
                 DrumEvent.OpenPlacement ->
                     current.copy(showCalibration = true, calibrationPage = CalibrationPage.PLACEMENT)

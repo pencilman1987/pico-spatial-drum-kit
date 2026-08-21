@@ -12,7 +12,19 @@ class DrumViewModelTest {
         val state = DrumViewModel().state.value
 
         assertFalse(state.showCalibration)
+        assertTrue(state.gestureModeEnabled)
         assertEquals(DrumId.SNARE, state.selectedDrum)
+    }
+
+    @Test
+    fun gestureModeCanBePausedAndResumed() {
+        val viewModel = DrumViewModel()
+
+        viewModel.onEvent(DrumEvent.ToggleGestureMode)
+        assertFalse(viewModel.state.value.gestureModeEnabled)
+
+        viewModel.onEvent(DrumEvent.ToggleGestureMode)
+        assertTrue(viewModel.state.value.gestureModeEnabled)
     }
 
     @Test
